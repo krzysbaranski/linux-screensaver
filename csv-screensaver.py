@@ -158,7 +158,7 @@ class RetroScreensaver(Gtk.Window):
     
     def limit_dataset_rows(self, dataset, max_rows=None):
         """Limit dataset to header + max_rows randomly selected data rows"""
-        max_rows = max_rows or self.MAX_DISPLAY_ROWS
+        max_rows = self.MAX_DISPLAY_ROWS if max_rows is None else max_rows
         if len(dataset) > 1:
             header = [dataset[0]]
             data_rows = dataset[1:]
@@ -168,7 +168,7 @@ class RetroScreensaver(Gtk.Window):
     
     def sample_rows(self, rows, max_rows=None):
         """Return up to max_rows sampled rows"""
-        max_rows = max_rows or self.MAX_DISPLAY_ROWS
+        max_rows = self.MAX_DISPLAY_ROWS if max_rows is None else max_rows
         if max_rows <= 0:
             return []
         if len(rows) > max_rows:
@@ -177,9 +177,12 @@ class RetroScreensaver(Gtk.Window):
     
     def load_parquet_in_chunks(self, data_file, max_rows=None, batch_size=1000):
         """Load parquet data without reading the entire file into memory"""
-        max_rows = max_rows or self.MAX_DISPLAY_ROWS
+        max_rows = self.MAX_DISPLAY_ROWS if max_rows is None else max_rows
         parquet_file = pq.ParquetFile(data_file)
         columns = parquet_file.schema.names
+        
+        if max_rows <= 0:
+            return [columns]
         
         # Start with header row and reservoir for sampled data
         sampled_rows = []
