@@ -14,6 +14,7 @@ import random
 import sys
 from pathlib import Path
 import pandas as pd
+import pyarrow.parquet as pq
 
 class RetroScreensaver(Gtk.Window):
     """Main screensaver window with retro terminal aesthetic"""
@@ -162,6 +163,30 @@ class RetroScreensaver(Gtk.Window):
                 data_rows = random.sample(data_rows, max_rows)
             return header + data_rows
         return dataset
+    
+    def load_parquet_in_chunks(self, data_file, max_rows=10000, batch_size=1000):
+        """Load parquet data without reading the entire file into memory"""
+        parquet_file = pq.ParquetFile(data_file)
+        columns = parquet_file.schema.names
+        
+        # Start with header row
+        dataset = [columns]
+        rows_needed = max_rows
+        
+        for batch in parquet_file.iter_batches(batch_size=batch_size):
+            batch_dict = batch.to_pydict()
+            batch_rows = list(zip(*(batch_dict.get(col, []) for col in columns)))
+            
+            if len(batch_rows) > rows_needed:
+                batch_rows = random.sample(batch_rows, rows_needed)
+            
+            dataset.extend(batch_rows)
+            rows_needed = max_rows - (len(dataset) - 1)
+            
+            if rows_needed <= 0:
+                break
+        
+        return dataset
         
     def load_csv_data(self):
         """Load CSV files (including gzipped) and Parquet files from the specified folder"""
@@ -188,12 +213,8 @@ class RetroScreensaver(Gtk.Window):
             # Load data based on file type (case-insensitive)
             file_name_lower = data_file.name.lower()
             if file_name_lower.endswith('.parquet'):
-                # Load Parquet file using pandas
-                df = pd.read_parquet(data_file)
-                # Convert to list of lists (header + rows) and limit rows
-                self.current_dataset = self.limit_dataset_rows(
-                    [df.columns.tolist()] + df.values.tolist()
-                )
+                # Load Parquet file in batches to avoid reading entire file into memory
+                self.current_dataset = self.load_parquet_in_chunks(data_file)
             elif file_name_lower.endswith('.csv.gz'):
                 # Load gzipped CSV file
                 with gzip.open(data_file, 'rt', newline='', encoding='utf-8') as f:
