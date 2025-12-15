@@ -145,8 +145,16 @@ The screensaver:
 3. Types out the content character-by-character
 4. Starts with slow typing (150ms per character)
 5. Accelerates progressively to fast typing (20ms per character)
-6. Shows a blinking cursor when complete
-7. Exits on any key press or mouse click
+6. For long lines that don't fit on screen, automatically pans horizontally across the content
+7. Shows a blinking cursor when complete
+8. Exits on any key press or mouse click
+
+### Long Line Support
+
+The screensaver now fully supports CSV files with long content:
+- **No line wrapping**: Long lines are displayed in their entirety without breaking
+- **Automatic panning**: The view smoothly scrolls left and right to show all content
+- **No column truncation**: All column data is displayed, regardless of length
 
 ## Customization
 
@@ -155,6 +163,7 @@ You can modify the screensaver behavior by editing `csv-screensaver.py`:
 - **Initial typing speed**: Change `self.typing_delay = 150` (in milliseconds)
 - **Final typing speed**: Change `self.min_typing_delay = 20`
 - **Acceleration rate**: Change `self.delay_decrease_rate = 0.98`
+- **Panning speed**: Change `self.pan_speed = 2` (pixels per frame)
 - **Colors**: Modify the CSS in `apply_retro_style()` method
 - **Data folder**: Change `self.csv_folder` default path
 

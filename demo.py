@@ -88,13 +88,13 @@ class TypingDemo:
                     (len(str(row[col_idx])) if col_idx < len(row) else 0)
                     for row in dataset
                 )
-                col_widths.append(min(max_width + 2, 30))
+                col_widths.append(max_width + 2)  # No cap on width
         
         # Format headers
         if dataset:
             header_row = dataset[0]
             header_line = " | ".join(
-                str(cell)[:col_widths[i]].ljust(col_widths[i])
+                str(cell).ljust(col_widths[i])
                 for i, cell in enumerate(header_row) if i < len(col_widths)
             )
             lines.append(header_line)
@@ -104,7 +104,7 @@ class TypingDemo:
             for row in dataset[1:]:
                 if row:
                     data_line = " | ".join(
-                        str(cell)[:col_widths[i]].ljust(col_widths[i])
+                        str(cell).ljust(col_widths[i])
                         for i, cell in enumerate(row) if i < len(col_widths)
                     )
                     lines.append(data_line)

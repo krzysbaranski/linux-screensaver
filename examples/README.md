@@ -16,6 +16,7 @@ The screensaver supports the following formats:
 - **CSV** (`.csv`) - Standard comma-separated values
 - **Gzipped CSV** (`.csv.gz`) - Compressed CSV files
 - **Parquet** (`.parquet`) - Apache Parquet columnar format
+- **long_lines.csv** - Example with long content to demonstrate horizontal panning
 
 ## Usage
 
