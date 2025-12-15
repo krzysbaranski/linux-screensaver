@@ -176,25 +176,28 @@ class RetroScreensaver(Gtk.Window):
         parquet_file = pq.ParquetFile(data_file)
         columns = parquet_file.schema.names
         
-        # Start with header row
-        dataset = [columns]
-        rows_needed = max_rows
+        # Start with header row and reservoir for sampled data
+        sampled_rows = []
+        total_rows_seen = 0
         
-        for batch in parquet_file.iter_batches(batch_size=batch_size):
-            batch_rows = list(
-                zip(*(batch.column(i).to_pylist() for i in range(len(columns))))
-            )
-            
-            batch_rows = self.sample_rows(batch_rows, rows_needed)
-            
-            dataset.extend(batch_rows)
-            rows_collected = len(dataset) - 1  # subtract header row
-            rows_needed = max_rows - rows_collected
-            
-            if rows_needed <= 0:
-                break
+        try:
+            for batch in parquet_file.iter_batches(batch_size=batch_size):
+                batch_rows = list(
+                    zip(*(batch.column(i).to_pylist() for i in range(len(columns))))
+                )
+                
+                for row in batch_rows:
+                    total_rows_seen += 1
+                    if len(sampled_rows) < max_rows:
+                        sampled_rows.append(row)
+                    else:
+                        swap_index = random.randint(1, total_rows_seen)
+                        if swap_index <= max_rows:
+                            sampled_rows[swap_index - 1] = row
+        finally:
+            parquet_file.close()
         
-        return dataset
+        return [columns] + sampled_rows
         
     def load_csv_data(self):
         """Load CSV files (including gzipped) and Parquet files from the specified folder"""
