@@ -13,6 +13,7 @@ import os
 import random
 import sys
 from pathlib import Path
+from contextlib import closing
 import pandas as pd
 import pyarrow.parquet as pq
 
@@ -178,33 +179,33 @@ class RetroScreensaver(Gtk.Window):
     def load_parquet_in_chunks(self, data_file, max_rows=None, batch_size=1000):
         """Load parquet data without reading the entire file into memory"""
         max_rows = self.MAX_DISPLAY_ROWS if max_rows is None else max_rows
-        parquet_file = pq.ParquetFile(data_file)
-        columns = parquet_file.schema.names
-        
-        if max_rows <= 0:
-            return [columns]
-        
-        # Start with header row and reservoir for sampled data
-        sampled_rows = []
-        total_rows_seen = 0
         
         try:
-            for batch in parquet_file.iter_batches(batch_size=batch_size):
-                column_arrays = [batch.column(i) for i in range(len(columns))]
+            with closing(pq.ParquetFile(data_file)) as parquet_file:
+                columns = parquet_file.schema.names
                 
-                for row_idx in range(batch.num_rows):
-                    row = tuple(col[row_idx].as_py() for col in column_arrays)
-                    total_rows_seen += 1
-                    if len(sampled_rows) < max_rows:
-                        sampled_rows.append(row)
-                    else:
-                        swap_index = random.randint(0, total_rows_seen - 1)
-                        if swap_index < max_rows:
-                            sampled_rows[swap_index] = row
+                if max_rows <= 0:
+                    return [columns]
+                
+                # Start with header row and reservoir for sampled data
+                sampled_rows = []
+                total_rows_seen = 0
+                
+                for batch in parquet_file.iter_batches(batch_size=batch_size):
+                    batch_dict = batch.to_pydict()
+                    rows_iter = zip(*(batch_dict[col] for col in columns))
+                    
+                    for row in rows_iter:
+                        total_rows_seen += 1
+                        if len(sampled_rows) < max_rows:
+                            sampled_rows.append(row)
+                        else:
+                            # Reservoir sampling: uniform replacement in existing sample
+                            swap_index = random.randint(0, total_rows_seen - 1)
+                            if swap_index < max_rows:
+                                sampled_rows[swap_index] = row
         except Exception as e:
             raise RuntimeError(f"Failed to stream parquet file {data_file}: {e}") from e
-        finally:
-            parquet_file.close()
         
         return [columns] + sampled_rows
         
