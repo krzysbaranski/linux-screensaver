@@ -7,6 +7,7 @@ Demonstrates the typing animation without requiring GTK
 import csv
 import gzip
 import os
+import random
 import time
 import sys
 from pathlib import Path
@@ -47,17 +48,36 @@ class TypingDemo:
                 # Load Parquet file using pandas
                 df = pd.read_parquet(data_file)
                 # Convert to list of lists (header + rows)
-                dataset = [df.columns.tolist()] + df.values.tolist()
+                header = [df.columns.tolist()]
+                data_rows = df.values.tolist()
+                # Limit to 10,000 randomly selected rows
+                if len(data_rows) > 10000:
+                    data_rows = random.sample(data_rows, 10000)
+                dataset = header + data_rows
             elif file_name_lower.endswith('.csv.gz'):
                 # Load gzipped CSV file
                 with gzip.open(data_file, 'rt', newline='', encoding='utf-8') as f:
                     reader = csv.reader(f)
                     dataset = list(reader)
+                # Limit to header + 10,000 randomly selected rows
+                if len(dataset) > 1:
+                    header = [dataset[0]]
+                    data_rows = dataset[1:]
+                    if len(data_rows) > 10000:
+                        data_rows = random.sample(data_rows, 10000)
+                    dataset = header + data_rows
             else:
                 # Load regular CSV file
                 with open(data_file, 'r', newline='', encoding='utf-8') as f:
                     reader = csv.reader(f)
                     dataset = list(reader)
+                # Limit to header + 10,000 randomly selected rows
+                if len(dataset) > 1:
+                    header = [dataset[0]]
+                    data_rows = dataset[1:]
+                    if len(data_rows) > 10000:
+                        data_rows = random.sample(data_rows, 10000)
+                    dataset = header + data_rows
             
             if dataset:
                 return self.format_data(dataset, data_file.name)

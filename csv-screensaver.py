@@ -181,17 +181,36 @@ class RetroScreensaver(Gtk.Window):
                 # Load Parquet file using pandas
                 df = pd.read_parquet(data_file)
                 # Convert to list of lists (header + rows)
-                self.current_dataset = [df.columns.tolist()] + df.values.tolist()
+                header = [df.columns.tolist()]
+                data_rows = df.values.tolist()
+                # Limit to 10,000 randomly selected rows
+                if len(data_rows) > 10000:
+                    data_rows = random.sample(data_rows, 10000)
+                self.current_dataset = header + data_rows
             elif file_name_lower.endswith('.csv.gz'):
                 # Load gzipped CSV file
                 with gzip.open(data_file, 'rt', newline='', encoding='utf-8') as f:
                     reader = csv.reader(f)
                     self.current_dataset = list(reader)
+                # Limit to header + 10,000 randomly selected rows
+                if len(self.current_dataset) > 1:
+                    header = [self.current_dataset[0]]
+                    data_rows = self.current_dataset[1:]
+                    if len(data_rows) > 10000:
+                        data_rows = random.sample(data_rows, 10000)
+                    self.current_dataset = header + data_rows
             else:
                 # Load regular CSV file
                 with open(data_file, 'r', newline='', encoding='utf-8') as f:
                     reader = csv.reader(f)
                     self.current_dataset = list(reader)
+                # Limit to header + 10,000 randomly selected rows
+                if len(self.current_dataset) > 1:
+                    header = [self.current_dataset[0]]
+                    data_rows = self.current_dataset[1:]
+                    if len(data_rows) > 10000:
+                        data_rows = random.sample(data_rows, 10000)
+                    self.current_dataset = header + data_rows
             
             if self.current_dataset:
                 self.prepare_display_text()
