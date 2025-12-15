@@ -182,11 +182,10 @@ class RetroScreensaver(Gtk.Window):
         
         try:
             for batch in parquet_file.iter_batches(batch_size=batch_size):
-                batch_rows = list(
-                    zip(*(batch.column(i).to_pylist() for i in range(len(columns))))
-                )
+                column_arrays = [batch.column(i) for i in range(len(columns))]
                 
-                for row in batch_rows:
+                for row_idx in range(batch.num_rows):
+                    row = tuple(col[row_idx].as_py() for col in column_arrays)
                     total_rows_seen += 1
                     if len(sampled_rows) < max_rows:
                         sampled_rows.append(row)
@@ -194,6 +193,8 @@ class RetroScreensaver(Gtk.Window):
                         swap_index = random.randint(1, total_rows_seen)
                         if swap_index <= max_rows:
                             sampled_rows[swap_index - 1] = row
+        except Exception as e:
+            raise RuntimeError(f"Failed to stream parquet file {data_file}: {e}") from e
         finally:
             parquet_file.close()
         
