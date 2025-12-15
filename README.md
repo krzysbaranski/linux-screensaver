@@ -2,6 +2,33 @@
 
 A fun and engaging Linux/GNOME screensaver that displays CSV datasets in a retro command-line style with realistic typing effects. Watch as data appears character-by-character, starting slow like a hesitant typist and accelerating to blazing-fast speeds!
 
+## Preview
+
+```
+======================================================================
+  DATA RETRIEVAL SYSTEM v1.0
+  [ CLASSIFIED INFORMATION ]
+======================================================================
+
+Loading file: retro_computers.csv
+
+Computer       | Year   | CPU              | RAM     
+-----------------------------------------------------
+Commodore 64   | 1982   | MOS 6510         | 64 KB   
+Apple II       | 1977   | MOS 6502         | 4 KB    
+IBM PC         | 1981   | Intel 8088       | 16 KB   
+Atari 800      | 1979   | MOS 6502         | 8 KB    
+ZX Spectrum    | 1982   | Zilog Z80        | 16 KB   
+Amiga 500      | 1987   | Motorola 68000   | 512 KB  
+
+======================================================================
+END OF DATA STREAM
+======================================================================
+█
+```
+
+*Displayed in classic green-on-black terminal style with smooth typing animation!*
+
 ## Features
 
 - 🎨 **Retro Terminal Aesthetic**: Classic green-on-black terminal display
