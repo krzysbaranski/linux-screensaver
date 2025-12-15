@@ -57,6 +57,10 @@ sudo apt-get install python3-gi python3-gi-cairo gir1.2-gtk-3.0
 # Or on Fedora
 sudo dnf install python3-gobject gtk3
 
+# Or on macOS
+brew install cairo pkg-config gtk+3 pygobject3
+export PKG_CONFIG_PATH="/opt/homebrew/Cellar/cairo/1.18.4/lib/pkgconfig:$PKG_CONFIG_PATH"
+
 # Install Python dependencies
 pip install -r requirements.txt
 
