@@ -35,7 +35,6 @@ class RetroScreensaver(Gtk.Window):
         self.pan_offset = 0  # Horizontal panning offset
         self.pan_direction = 1  # 1 for right, -1 for left
         self.pan_speed = 2  # Pixels to pan per update
-        self.max_pan_offset = 0  # Maximum pan distance
         
         # Setup window
         self.setup_window()
@@ -207,7 +206,7 @@ class RetroScreensaver(Gtk.Window):
         if self.current_dataset:
             header_row = self.current_dataset[0]
             header_line = " | ".join(
-                str(cell)[:col_widths[i]].ljust(col_widths[i])
+                str(cell).ljust(col_widths[i])
                 for i, cell in enumerate(header_row) if i < len(col_widths)
             )
             lines.append(header_line)
@@ -217,7 +216,7 @@ class RetroScreensaver(Gtk.Window):
             for row in self.current_dataset[1:]:
                 if row:  # Skip empty rows
                     data_line = " | ".join(
-                        str(cell)[:col_widths[i]].ljust(col_widths[i])
+                        str(cell).ljust(col_widths[i])
                         for i, cell in enumerate(row) if i < len(col_widths)
                     )
                     lines.append(data_line)
@@ -339,6 +338,10 @@ class RetroScreensaver(Gtk.Window):
         
         if not h_adj:
             return True
+        
+        # Ensure pan_speed is not zero to avoid division by zero
+        if self.pan_speed <= 0:
+            self.pan_speed = 2
         
         # Get viewport and content dimensions
         page_size = h_adj.get_page_size()

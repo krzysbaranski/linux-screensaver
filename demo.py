@@ -73,7 +73,7 @@ class TypingDemo:
         if dataset:
             header_row = dataset[0]
             header_line = " | ".join(
-                str(cell)[:col_widths[i]].ljust(col_widths[i])
+                str(cell).ljust(col_widths[i])
                 for i, cell in enumerate(header_row) if i < len(col_widths)
             )
             lines.append(header_line)
@@ -83,7 +83,7 @@ class TypingDemo:
             for row in dataset[1:]:
                 if row:
                     data_line = " | ".join(
-                        str(cell)[:col_widths[i]].ljust(col_widths[i])
+                        str(cell).ljust(col_widths[i])
                         for i, cell in enumerate(row) if i < len(col_widths)
                     )
                     lines.append(data_line)
