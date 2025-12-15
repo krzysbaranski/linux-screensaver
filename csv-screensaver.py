@@ -8,10 +8,12 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, Gdk, GLib, Pango
 import csv
+import gzip
 import os
 import random
 import sys
 from pathlib import Path
+import pandas as pd
 
 class RetroScreensaver(Gtk.Window):
     """Main screensaver window with retro terminal aesthetic"""
@@ -152,32 +154,51 @@ class RetroScreensaver(Gtk.Window):
         tag_table.add(cursor_tag)
         
     def load_csv_data(self):
-        """Load CSV files from the specified folder"""
+        """Load CSV files (including gzipped) and Parquet files from the specified folder"""
         if not os.path.exists(self.csv_folder):
             # Create folder and add sample data
             os.makedirs(self.csv_folder, exist_ok=True)
             self.create_sample_csv()
         
+        # Find CSV, gzipped CSV, and Parquet files
         csv_files = list(Path(self.csv_folder).glob("*.csv"))
+        csv_gz_files = list(Path(self.csv_folder).glob("*.csv.gz"))
+        parquet_files = list(Path(self.csv_folder).glob("*.parquet"))
         
-        if not csv_files:
-            self.current_text = "No CSV files found in: " + self.csv_folder
+        all_files = csv_files + csv_gz_files + parquet_files
+        
+        if not all_files:
+            self.current_text = "No CSV or Parquet files found in: " + self.csv_folder
             return
         
-        # Pick a random CSV file
-        csv_file = random.choice(csv_files)
+        # Pick a random file
+        data_file = random.choice(all_files)
         
         try:
-            with open(csv_file, 'r', newline='', encoding='utf-8') as f:
-                reader = csv.reader(f)
-                self.current_dataset = list(reader)
+            # Load data based on file type (case-insensitive)
+            file_name_lower = data_file.name.lower()
+            if file_name_lower.endswith('.parquet'):
+                # Load Parquet file using pandas
+                df = pd.read_parquet(data_file)
+                # Convert to list of lists (header + rows)
+                self.current_dataset = [df.columns.tolist()] + df.values.tolist()
+            elif file_name_lower.endswith('.csv.gz'):
+                # Load gzipped CSV file
+                with gzip.open(data_file, 'rt', newline='', encoding='utf-8') as f:
+                    reader = csv.reader(f)
+                    self.current_dataset = list(reader)
+            else:
+                # Load regular CSV file
+                with open(data_file, 'r', newline='', encoding='utf-8') as f:
+                    reader = csv.reader(f)
+                    self.current_dataset = list(reader)
             
             if self.current_dataset:
                 self.prepare_display_text()
             else:
-                self.current_text = f"Empty CSV file: {csv_file.name}"
+                self.current_text = f"Empty file: {data_file.name}"
         except Exception as e:
-            self.current_text = f"Error loading CSV: {str(e)}"
+            self.current_text = f"Error loading file: {str(e)}"
     
     def prepare_display_text(self):
         """Format CSV data for retro display"""
