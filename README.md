@@ -59,7 +59,7 @@ sudo dnf install python3-gobject gtk3
 
 # Or on macOS
 brew install cairo pkg-config gtk+3 pygobject3
-# Note: Adjust cairo version (1.18.4) if needed based on your installed version
+# Note: Using version-independent Homebrew path
 export PKG_CONFIG_PATH="/opt/homebrew/opt/cairo/lib/pkgconfig:$PKG_CONFIG_PATH"
 
 # Install Python dependencies
