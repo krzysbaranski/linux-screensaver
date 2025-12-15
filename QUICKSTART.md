@@ -14,7 +14,8 @@
    
    # macOS
    brew install cairo pkg-config gtk+3 pygobject3
-   export PKG_CONFIG_PATH="/opt/homebrew/Cellar/cairo/1.18.4/lib/pkgconfig:$PKG_CONFIG_PATH"
+   # Note: Using version-independent Homebrew path
+   export PKG_CONFIG_PATH="/opt/homebrew/opt/cairo/lib/pkgconfig:$PKG_CONFIG_PATH"
    ```
 
 2. **Install the screensaver:**
