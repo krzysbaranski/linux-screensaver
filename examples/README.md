@@ -7,6 +7,7 @@ This directory contains example CSV files that demonstrate the CSV Retro Screens
 - **retro_computers.csv** - Classic computers from the 1970s and 1980s
 - **fun_facts.csv** - Interesting trivia from various fields
 - **programming_languages.csv** - Popular programming languages and their creators
+- **long_lines.csv** - Example with long content to demonstrate horizontal panning
 
 ## Usage
 
