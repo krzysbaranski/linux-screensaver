@@ -21,6 +21,16 @@ class TypingDemo:
         self.typing_delay = 0.150  # Start with slow typing (seconds)
         self.min_typing_delay = 0.020  # End with fast typing
         self.delay_decrease_rate = 0.98
+    
+    def limit_dataset_rows(self, dataset, max_rows=10000):
+        """Limit dataset to header + max_rows randomly selected data rows"""
+        if len(dataset) > 1:
+            header = [dataset[0]]
+            data_rows = dataset[1:]
+            if len(data_rows) > max_rows:
+                data_rows = random.sample(data_rows, max_rows)
+            return header + data_rows
+        return dataset
         
     def load_csv_data(self):
         """Load CSV files (including gzipped) and Parquet files"""
@@ -60,24 +70,14 @@ class TypingDemo:
                     reader = csv.reader(f)
                     dataset = list(reader)
                 # Limit to header + 10,000 randomly selected rows
-                if len(dataset) > 1:
-                    header = [dataset[0]]
-                    data_rows = dataset[1:]
-                    if len(data_rows) > 10000:
-                        data_rows = random.sample(data_rows, 10000)
-                    dataset = header + data_rows
+                dataset = self.limit_dataset_rows(dataset)
             else:
                 # Load regular CSV file
                 with open(data_file, 'r', newline='', encoding='utf-8') as f:
                     reader = csv.reader(f)
                     dataset = list(reader)
                 # Limit to header + 10,000 randomly selected rows
-                if len(dataset) > 1:
-                    header = [dataset[0]]
-                    data_rows = dataset[1:]
-                    if len(data_rows) > 10000:
-                        data_rows = random.sample(data_rows, 10000)
-                    dataset = header + data_rows
+                dataset = self.limit_dataset_rows(dataset)
             
             if dataset:
                 return self.format_data(dataset, data_file.name)

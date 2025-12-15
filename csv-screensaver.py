@@ -152,6 +152,16 @@ class RetroScreensaver(Gtk.Window):
         cursor_tag.set_property("background", "#00FF00")
         cursor_tag.set_property("foreground", "#000000")
         tag_table.add(cursor_tag)
+    
+    def limit_dataset_rows(self, dataset, max_rows=10000):
+        """Limit dataset to header + max_rows randomly selected data rows"""
+        if len(dataset) > 1:
+            header = [dataset[0]]
+            data_rows = dataset[1:]
+            if len(data_rows) > max_rows:
+                data_rows = random.sample(data_rows, max_rows)
+            return header + data_rows
+        return dataset
         
     def load_csv_data(self):
         """Load CSV files (including gzipped) and Parquet files from the specified folder"""
@@ -193,24 +203,14 @@ class RetroScreensaver(Gtk.Window):
                     reader = csv.reader(f)
                     self.current_dataset = list(reader)
                 # Limit to header + 10,000 randomly selected rows
-                if len(self.current_dataset) > 1:
-                    header = [self.current_dataset[0]]
-                    data_rows = self.current_dataset[1:]
-                    if len(data_rows) > 10000:
-                        data_rows = random.sample(data_rows, 10000)
-                    self.current_dataset = header + data_rows
+                self.current_dataset = self.limit_dataset_rows(self.current_dataset)
             else:
                 # Load regular CSV file
                 with open(data_file, 'r', newline='', encoding='utf-8') as f:
                     reader = csv.reader(f)
                     self.current_dataset = list(reader)
                 # Limit to header + 10,000 randomly selected rows
-                if len(self.current_dataset) > 1:
-                    header = [self.current_dataset[0]]
-                    data_rows = self.current_dataset[1:]
-                    if len(data_rows) > 10000:
-                        data_rows = random.sample(data_rows, 10000)
-                    self.current_dataset = header + data_rows
+                self.current_dataset = self.limit_dataset_rows(self.current_dataset)
             
             if self.current_dataset:
                 self.prepare_display_text()
