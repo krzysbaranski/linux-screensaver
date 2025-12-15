@@ -165,13 +165,14 @@ class RetroScreensaver(Gtk.Window):
         data_file = random.choice(all_files)
         
         try:
-            # Load data based on file type
-            if data_file.name.endswith('.parquet'):
+            # Load data based on file type (case-insensitive)
+            file_name_lower = data_file.name.lower()
+            if file_name_lower.endswith('.parquet'):
                 # Load Parquet file using pandas
                 df = pd.read_parquet(data_file)
                 # Convert to list of lists (header + rows)
                 self.current_dataset = [df.columns.tolist()] + df.values.tolist()
-            elif data_file.name.endswith('.csv.gz'):
+            elif file_name_lower.endswith('.csv.gz'):
                 # Load gzipped CSV file
                 with gzip.open(data_file, 'rt', newline='', encoding='utf-8') as f:
                     reader = csv.reader(f)
