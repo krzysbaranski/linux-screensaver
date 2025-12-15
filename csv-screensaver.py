@@ -19,6 +19,8 @@ import pyarrow.parquet as pq
 class RetroScreensaver(Gtk.Window):
     """Main screensaver window with retro terminal aesthetic"""
     
+    MAX_DISPLAY_ROWS = 10000
+    
     def __init__(self, csv_folder=None):
         super().__init__(title="CSV Retro Screensaver")
         
@@ -154,8 +156,9 @@ class RetroScreensaver(Gtk.Window):
         cursor_tag.set_property("foreground", "#000000")
         tag_table.add(cursor_tag)
     
-    def limit_dataset_rows(self, dataset, max_rows=10000):
+    def limit_dataset_rows(self, dataset, max_rows=None):
         """Limit dataset to header + max_rows randomly selected data rows"""
+        max_rows = max_rows or self.MAX_DISPLAY_ROWS
         if len(dataset) > 1:
             header = [dataset[0]]
             data_rows = dataset[1:]
@@ -163,16 +166,18 @@ class RetroScreensaver(Gtk.Window):
             return header + data_rows
         return dataset
     
-    def sample_rows(self, rows, max_rows):
+    def sample_rows(self, rows, max_rows=None):
         """Return up to max_rows sampled rows"""
+        max_rows = max_rows or self.MAX_DISPLAY_ROWS
         if max_rows <= 0:
             return []
         if len(rows) > max_rows:
             return random.sample(rows, max_rows)
         return rows
     
-    def load_parquet_in_chunks(self, data_file, max_rows=10000, batch_size=1000):
+    def load_parquet_in_chunks(self, data_file, max_rows=None, batch_size=1000):
         """Load parquet data without reading the entire file into memory"""
+        max_rows = max_rows or self.MAX_DISPLAY_ROWS
         parquet_file = pq.ParquetFile(data_file)
         columns = parquet_file.schema.names
         
@@ -190,9 +195,9 @@ class RetroScreensaver(Gtk.Window):
                     if len(sampled_rows) < max_rows:
                         sampled_rows.append(row)
                     else:
-                        swap_index = random.randint(1, total_rows_seen)
-                        if swap_index <= max_rows:
-                            sampled_rows[swap_index - 1] = row
+                        swap_index = random.randint(0, total_rows_seen - 1)
+                        if swap_index < max_rows:
+                            sampled_rows[swap_index] = row
         except Exception as e:
             raise RuntimeError(f"Failed to stream parquet file {data_file}: {e}") from e
         finally:
