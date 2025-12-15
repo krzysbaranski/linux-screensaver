@@ -159,10 +159,17 @@ class RetroScreensaver(Gtk.Window):
         if len(dataset) > 1:
             header = [dataset[0]]
             data_rows = dataset[1:]
-            if len(data_rows) > max_rows:
-                data_rows = random.sample(data_rows, max_rows)
+            data_rows = self.sample_rows(data_rows, max_rows)
             return header + data_rows
         return dataset
+    
+    def sample_rows(self, rows, max_rows):
+        """Return up to max_rows sampled rows"""
+        if max_rows <= 0:
+            return []
+        if len(rows) > max_rows:
+            return random.sample(rows, max_rows)
+        return rows
     
     def load_parquet_in_chunks(self, data_file, max_rows=10000, batch_size=1000):
         """Load parquet data without reading the entire file into memory"""
@@ -174,16 +181,15 @@ class RetroScreensaver(Gtk.Window):
         rows_needed = max_rows
         
         for batch in parquet_file.iter_batches(batch_size=batch_size):
-            batch_dict = batch.to_pydict()
             batch_rows = list(
-                zip(*(batch_dict.get(col, [None] * batch.num_rows) for col in columns))
+                zip(*(batch.column(i).to_pylist() for i in range(len(columns))))
             )
             
-            if len(batch_rows) > rows_needed:
-                batch_rows = random.sample(batch_rows, rows_needed)
+            batch_rows = self.sample_rows(batch_rows, rows_needed)
             
             dataset.extend(batch_rows)
-            rows_needed = max_rows - (len(dataset) - 1)
+            rows_collected = len(dataset) - 1  # subtract header row
+            rows_needed = max_rows - rows_collected
             
             if rows_needed <= 0:
                 break
