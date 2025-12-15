@@ -216,7 +216,8 @@ class RetroScreensaver(Gtk.Window):
         lines.append("Initializing data stream...")
         lines.append("")
         
-        # Determine column widths
+        # Determine column widths (capped at 30 characters)
+        MAX_COL_WIDTH = 30
         col_widths = []
         if self.current_dataset:
             num_cols = len(self.current_dataset[0])
@@ -225,13 +226,14 @@ class RetroScreensaver(Gtk.Window):
                     (len(str(row[col_idx])) if col_idx < len(row) else 0)
                     for row in self.current_dataset
                 )
-                col_widths.append(max_width + 2)  # No cap on width for long lines
+                # Cap width at MAX_COL_WIDTH
+                col_widths.append(min(max_width, MAX_COL_WIDTH))
         
         # Format headers if first row looks like headers
         if self.current_dataset:
             header_row = self.current_dataset[0]
             header_line = " | ".join(
-                str(cell).ljust(col_widths[i])
+                self._truncate_cell(str(cell), col_widths[i])
                 for i, cell in enumerate(header_row) if i < len(col_widths)
             )
             lines.append(header_line)
@@ -241,7 +243,7 @@ class RetroScreensaver(Gtk.Window):
             for row in self.current_dataset[1:]:
                 if row:  # Skip empty rows
                     data_line = " | ".join(
-                        str(cell).ljust(col_widths[i])
+                        self._truncate_cell(str(cell), col_widths[i])
                         for i, cell in enumerate(row) if i < len(col_widths)
                     )
                     lines.append(data_line)
@@ -252,6 +254,17 @@ class RetroScreensaver(Gtk.Window):
         lines.append("=" * 70)
         
         self.current_text = "\n".join(lines)
+    
+    def _truncate_cell(self, cell_text, max_width):
+        """Truncate cell content to max_width, adding ellipsis if needed"""
+        if len(cell_text) > max_width:
+            # Reserve 3 characters for ellipsis
+            if max_width >= 3:
+                return cell_text[:max_width - 3] + "..."
+            else:
+                return cell_text[:max_width]
+        else:
+            return cell_text.ljust(max_width)
     
     def create_sample_csv(self):
         """Create sample CSV files for demonstration"""
