@@ -36,6 +36,10 @@ class RetroScreensaver(Gtk.Window):
         self.pan_direction = 1  # 1 for right, -1 for left
         self.pan_speed = 2  # Pixels to pan per update
         
+        # Panning animation constants
+        self.PANNING_FRAME_INTERVAL_MS = 33  # ~30 FPS for smooth animation
+        self.CURSOR_BLINK_FRAMES = 15  # Blink cursor every ~500ms at 30 FPS
+        
         # Setup window
         self.setup_window()
         self.setup_ui()
@@ -328,8 +332,8 @@ class RetroScreensaver(Gtk.Window):
         self.blink_state = True
         self.text_buffer.set_text(self.display_text + "█")
         
-        # Start panning timer (30 FPS for smooth animation)
-        self.timer_id = GLib.timeout_add(33, self.pan_view)
+        # Start panning timer
+        self.timer_id = GLib.timeout_add(self.PANNING_FRAME_INTERVAL_MS, self.pan_view)
     
     def pan_view(self):
         """Animate horizontal panning across the text"""
@@ -366,8 +370,8 @@ class RetroScreensaver(Gtk.Window):
         # Apply the scroll position
         h_adj.set_value(self.pan_offset)
         
-        # Blink cursor every ~500ms (15 frames at 30 FPS)
-        frame_count = int(self.pan_offset / self.pan_speed) % 15
+        # Blink cursor periodically while panning
+        frame_count = int(self.pan_offset / self.pan_speed) % self.CURSOR_BLINK_FRAMES
         if frame_count == 0:
             self.blink_state = not self.blink_state
             cursor = "█" if self.blink_state else " "
