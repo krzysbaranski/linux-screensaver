@@ -175,7 +175,9 @@ class RetroScreensaver(Gtk.Window):
         
         for batch in parquet_file.iter_batches(batch_size=batch_size):
             batch_dict = batch.to_pydict()
-            batch_rows = list(zip(*(batch_dict.get(col, []) for col in columns)))
+            batch_rows = list(
+                zip(*(batch_dict.get(col, [None] * batch.num_rows) for col in columns))
+            )
             
             if len(batch_rows) > rows_needed:
                 batch_rows = random.sample(batch_rows, rows_needed)
