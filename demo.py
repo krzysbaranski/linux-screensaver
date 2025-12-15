@@ -1,0 +1,154 @@
+#!/usr/bin/env python3
+"""
+Demo script for CSV Retro Screensaver typing effect (terminal version)
+Demonstrates the typing animation without requiring GTK
+"""
+
+import csv
+import os
+import time
+import sys
+from pathlib import Path
+
+class TypingDemo:
+    """Demonstrates the typing effect in a terminal"""
+    
+    def __init__(self, csv_folder=None):
+        self.csv_folder = csv_folder or os.path.expanduser("~/.local/share/csv-screensaver/data")
+        self.typing_delay = 0.150  # Start with slow typing (seconds)
+        self.min_typing_delay = 0.020  # End with fast typing
+        self.delay_decrease_rate = 0.98
+        
+    def load_csv_data(self):
+        """Load a random CSV file"""
+        if not os.path.exists(self.csv_folder):
+            os.makedirs(self.csv_folder, exist_ok=True)
+            self.create_sample_csv()
+        
+        csv_files = list(Path(self.csv_folder).glob("*.csv"))
+        
+        if not csv_files:
+            return "No CSV files found in: " + self.csv_folder
+        
+        # Use first CSV file
+        csv_file = csv_files[0]
+        
+        try:
+            with open(csv_file, 'r', newline='', encoding='utf-8') as f:
+                reader = csv.reader(f)
+                dataset = list(reader)
+            
+            if dataset:
+                return self.format_data(dataset, csv_file.name)
+            else:
+                return f"Empty CSV file: {csv_file.name}"
+        except Exception as e:
+            return f"Error loading CSV: {str(e)}"
+    
+    def format_data(self, dataset, filename):
+        """Format CSV data for retro display"""
+        lines = []
+        
+        # Add retro header
+        lines.append("=" * 70)
+        lines.append("  DATA RETRIEVAL SYSTEM v1.0")
+        lines.append("  [ CLASSIFIED INFORMATION ]")
+        lines.append("=" * 70)
+        lines.append("")
+        lines.append(f"Loading file: {filename}")
+        lines.append("")
+        
+        # Determine column widths
+        col_widths = []
+        if dataset:
+            num_cols = len(dataset[0])
+            for col_idx in range(num_cols):
+                max_width = max(
+                    (len(str(row[col_idx])) if col_idx < len(row) else 0)
+                    for row in dataset
+                )
+                col_widths.append(min(max_width + 2, 30))
+        
+        # Format headers
+        if dataset:
+            header_row = dataset[0]
+            header_line = " | ".join(
+                str(cell)[:col_widths[i]].ljust(col_widths[i])
+                for i, cell in enumerate(header_row) if i < len(col_widths)
+            )
+            lines.append(header_line)
+            lines.append("-" * len(header_line))
+            
+            # Add data rows
+            for row in dataset[1:]:
+                if row:
+                    data_line = " | ".join(
+                        str(cell)[:col_widths[i]].ljust(col_widths[i])
+                        for i, cell in enumerate(row) if i < len(col_widths)
+                    )
+                    lines.append(data_line)
+        
+        lines.append("")
+        lines.append("=" * 70)
+        lines.append("END OF DATA STREAM")
+        lines.append("=" * 70)
+        
+        return "\n".join(lines)
+    
+    def create_sample_csv(self):
+        """Create sample CSV files"""
+        # Sample: Retro computers
+        sample_path = os.path.join(self.csv_folder, "retro_computers.csv")
+        with open(sample_path, 'w', newline='', encoding='utf-8') as f:
+            writer = csv.writer(f)
+            writer.writerow(["Computer", "Year", "CPU", "RAM"])
+            writer.writerow(["Commodore 64", "1982", "MOS 6510", "64 KB"])
+            writer.writerow(["Apple II", "1977", "MOS 6502", "4 KB"])
+            writer.writerow(["IBM PC", "1981", "Intel 8088", "16 KB"])
+            writer.writerow(["Atari 800", "1979", "MOS 6502", "8 KB"])
+            writer.writerow(["ZX Spectrum", "1982", "Zilog Z80", "16 KB"])
+    
+    def type_text(self, text):
+        """Display text with typing effect"""
+        # Clear screen
+        print("\033[2J\033[H", end='')
+        
+        # Set green text on black background
+        print("\033[32m\033[40m", end='')
+        
+        current_delay = self.typing_delay
+        
+        for i, char in enumerate(text):
+            print(char, end='', flush=True)
+            
+            if char != '\n':  # Don't delay on newlines as much
+                time.sleep(current_delay)
+                
+                # Accelerate typing
+                if current_delay > self.min_typing_delay:
+                    current_delay *= self.delay_decrease_rate
+        
+        # Add blinking cursor
+        print("█", end='', flush=True)
+        
+        # Reset colors
+        print("\033[0m")
+        print("\n\nPress Ctrl+C to exit")
+
+def main():
+    """Main entry point"""
+    csv_folder = None
+    if len(sys.argv) > 1:
+        csv_folder = sys.argv[1]
+    
+    demo = TypingDemo(csv_folder)
+    text = demo.load_csv_data()
+    
+    try:
+        demo.type_text(text)
+        time.sleep(10)  # Keep visible for 10 seconds
+    except KeyboardInterrupt:
+        print("\n\033[0m\nDemo terminated.")
+
+if __name__ == "__main__":
+    main()
