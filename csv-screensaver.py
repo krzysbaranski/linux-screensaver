@@ -32,6 +32,10 @@ class RetroScreensaver(Gtk.Window):
         self.current_row = 0
         self.blink_state = True
         self.chars_typed = 0
+        self.pan_offset = 0  # Horizontal panning offset
+        self.pan_direction = 1  # 1 for right, -1 for left
+        self.pan_speed = 2  # Pixels to pan per update
+        self.max_pan_offset = 0  # Maximum pan distance
         
         # Setup window
         self.setup_window()
@@ -69,7 +73,7 @@ class RetroScreensaver(Gtk.Window):
         self.text_view = Gtk.TextView()
         self.text_view.set_editable(False)
         self.text_view.set_cursor_visible(False)
-        self.text_view.set_wrap_mode(Gtk.WrapMode.WORD_CHAR)
+        self.text_view.set_wrap_mode(Gtk.WrapMode.NONE)  # Don't wrap long lines
         self.text_view.set_left_margin(20)
         self.text_view.set_right_margin(20)
         self.text_view.set_top_margin(20)
@@ -85,6 +89,9 @@ class RetroScreensaver(Gtk.Window):
         scrolled.add(self.text_view)
         box.pack_start(scrolled, True, True, 0)
         self.add(box)
+        
+        # Store scrolled window for panning
+        self.scrolled_window = scrolled
         
     def apply_retro_style(self):
         """Apply retro terminal color scheme and monospace font"""
@@ -194,7 +201,7 @@ class RetroScreensaver(Gtk.Window):
                     (len(str(row[col_idx])) if col_idx < len(row) else 0)
                     for row in self.current_dataset
                 )
-                col_widths.append(min(max_width + 2, 30))  # Cap at 30 chars
+                col_widths.append(max_width + 2)  # No cap on width for long lines
         
         # Format headers if first row looks like headers
         if self.current_dataset:
@@ -285,8 +292,8 @@ class RetroScreensaver(Gtk.Window):
             self.schedule_next_char()
             return False
         else:
-            # Typing complete, start blinking cursor
-            self.start_cursor_blink()
+            # Typing complete, start panning animation
+            self.start_panning()
             return False
     
     def start_cursor_blink(self):
@@ -307,6 +314,63 @@ class RetroScreensaver(Gtk.Window):
         self.text_view.scroll_to_iter(end_iter, 0.0, False, 0.0, 0.0)
         
         return True  # Continue blinking
+    
+    def start_panning(self):
+        """Start horizontal panning animation for long lines"""
+        if self.timer_id:
+            GLib.source_remove(self.timer_id)
+        
+        # Calculate maximum horizontal scroll (content width - viewport width)
+        # We'll get this in the pan_view method
+        self.pan_offset = 0
+        self.pan_direction = 1
+        
+        # Start with cursor visible
+        self.blink_state = True
+        self.text_buffer.set_text(self.display_text + "█")
+        
+        # Start panning timer (30 FPS for smooth animation)
+        self.timer_id = GLib.timeout_add(33, self.pan_view)
+    
+    def pan_view(self):
+        """Animate horizontal panning across the text"""
+        # Get horizontal adjustment
+        h_adj = self.scrolled_window.get_hadjustment()
+        
+        if not h_adj:
+            return True
+        
+        # Get viewport and content dimensions
+        page_size = h_adj.get_page_size()
+        upper = h_adj.get_upper()
+        max_scroll = max(0, upper - page_size)
+        
+        # If content fits in viewport, just blink cursor
+        if max_scroll <= 0:
+            return self.blink_cursor()
+        
+        # Pan the view
+        self.pan_offset += self.pan_speed * self.pan_direction
+        
+        # Reverse direction at boundaries
+        if self.pan_offset >= max_scroll:
+            self.pan_offset = max_scroll
+            self.pan_direction = -1
+        elif self.pan_offset <= 0:
+            self.pan_offset = 0
+            self.pan_direction = 1
+        
+        # Apply the scroll position
+        h_adj.set_value(self.pan_offset)
+        
+        # Blink cursor every ~500ms (15 frames at 30 FPS)
+        frame_count = int(self.pan_offset / self.pan_speed) % 15
+        if frame_count == 0:
+            self.blink_state = not self.blink_state
+            cursor = "█" if self.blink_state else " "
+            self.text_buffer.set_text(self.display_text + cursor)
+        
+        return True  # Continue panning
     
     def on_key_press(self, widget, event):
         """Exit on any key press"""

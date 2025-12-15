@@ -67,7 +67,7 @@ class TypingDemo:
                     (len(str(row[col_idx])) if col_idx < len(row) else 0)
                     for row in dataset
                 )
-                col_widths.append(min(max_width + 2, 30))
+                col_widths.append(max_width + 2)  # No cap on width
         
         # Format headers
         if dataset:
