@@ -57,13 +57,10 @@ class TypingDemo:
             if file_name_lower.endswith('.parquet'):
                 # Load Parquet file using pandas
                 df = pd.read_parquet(data_file)
-                # Convert to list of lists (header + rows)
-                header = [df.columns.tolist()]
-                data_rows = df.values.tolist()
-                # Limit to 10,000 randomly selected rows
-                if len(data_rows) > 10000:
-                    data_rows = random.sample(data_rows, 10000)
-                dataset = header + data_rows
+                # Convert to list of lists (header + rows) and limit rows
+                dataset = self.limit_dataset_rows(
+                    [df.columns.tolist()] + df.values.tolist()
+                )
             elif file_name_lower.endswith('.csv.gz'):
                 # Load gzipped CSV file
                 with gzip.open(data_file, 'rt', newline='', encoding='utf-8') as f:
