@@ -154,12 +154,12 @@ The screensaver:
 7. Shows a blinking cursor when complete
 8. Exits on any key press or mouse click
 
-### Long Line Support
+### Column Display
 
-The screensaver now fully supports CSV files with long content:
-- **No line wrapping**: Long lines are displayed in their entirety without breaking
-- **Automatic panning**: The view smoothly scrolls left and right to show all content
-- **No column truncation**: All column data is displayed, regardless of length
+The screensaver handles column data efficiently:
+- **Column truncation**: Long columns are truncated to 30 characters with ellipsis (...) for better readability
+- **Automatic panning**: The view smoothly scrolls left and right to show all visible content
+- **No line wrapping**: Lines are displayed without breaking, maintaining the tabular format
 
 ## Customization
 

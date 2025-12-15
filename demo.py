@@ -79,7 +79,8 @@ class TypingDemo:
         lines.append(f"Loading file: {filename}")
         lines.append("")
         
-        # Determine column widths
+        # Determine column widths (capped at 30 characters)
+        MAX_COL_WIDTH = 30
         col_widths = []
         if dataset:
             num_cols = len(dataset[0])
@@ -88,13 +89,14 @@ class TypingDemo:
                     (len(str(row[col_idx])) if col_idx < len(row) else 0)
                     for row in dataset
                 )
-                col_widths.append(max_width + 2)  # No cap on width
+                # Cap width at MAX_COL_WIDTH
+                col_widths.append(min(max_width, MAX_COL_WIDTH))
         
         # Format headers
         if dataset:
             header_row = dataset[0]
             header_line = " | ".join(
-                str(cell).ljust(col_widths[i])
+                self._truncate_cell(str(cell), col_widths[i])
                 for i, cell in enumerate(header_row) if i < len(col_widths)
             )
             lines.append(header_line)
@@ -104,7 +106,7 @@ class TypingDemo:
             for row in dataset[1:]:
                 if row:
                     data_line = " | ".join(
-                        str(cell).ljust(col_widths[i])
+                        self._truncate_cell(str(cell), col_widths[i])
                         for i, cell in enumerate(row) if i < len(col_widths)
                     )
                     lines.append(data_line)
@@ -115,6 +117,17 @@ class TypingDemo:
         lines.append("=" * 70)
         
         return "\n".join(lines)
+    
+    def _truncate_cell(self, cell_text, max_width):
+        """Truncate cell content to max_width, adding ellipsis if needed"""
+        if len(cell_text) > max_width:
+            # Reserve 3 characters for ellipsis
+            if max_width >= 3:
+                return cell_text[:max_width - 3] + "..."
+            else:
+                return cell_text[:max_width]
+        else:
+            return cell_text.ljust(max_width)
     
     def create_sample_csv(self):
         """Create sample CSV files"""
