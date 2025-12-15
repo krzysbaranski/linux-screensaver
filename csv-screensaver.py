@@ -171,7 +171,7 @@ class RetroScreensaver(Gtk.Window):
                 df = pd.read_parquet(data_file)
                 # Convert to list of lists (header + rows)
                 self.current_dataset = [df.columns.tolist()] + df.values.tolist()
-            elif data_file.suffix == '.gz':
+            elif data_file.name.endswith('.csv.gz'):
                 # Load gzipped CSV file
                 with gzip.open(data_file, 'rt', newline='', encoding='utf-8') as f:
                     reader = csv.reader(f)
