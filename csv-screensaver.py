@@ -242,10 +242,10 @@ class RetroScreensaver(Gtk.Window):
             writer = csv.writer(f)
             writer.writerow(["Fact ID", "Category", "Fact"])
             writer.writerow(["001", "Space", "A day on Venus is longer than its year"])
-            writer.writerow(["002", "Ocean", "More people have been to space than Mariana Trench"])
-            writer.writerow(["003", "Nature", "Honey never spoils"])
-            writer.writerow(["004", "Tech", "First computer bug was an actual bug"])
-            writer.writerow(["005", "History", "Oxford University predates Aztec Empire"])
+            writer.writerow(["002", "Ocean", "More people have been to space than the Mariana Trench"])
+            writer.writerow(["003", "Nature", "Honey never spoils - it can last thousands of years"])
+            writer.writerow(["004", "Tech", "The first computer bug was an actual moth"])
+            writer.writerow(["005", "History", "Oxford University predates the Aztec Empire"])
     
     def start_typing(self):
         """Start the typing animation"""
