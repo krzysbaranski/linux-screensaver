@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=CSV Retro Screensaver
+Comment=Display CSV data in retro terminal style with typing effects
+Exec=/usr/bin/csv-screensaver
+Icon=utilities-terminal
+Type=Application
+Categories=Screensaver;
+OnlyShowIn=GNOME;
+X-GNOME-Screensaver=true

@@ -1,0 +1,8 @@
+Language,Year,Creator,Paradigm
+Python,1991,Guido van Rossum,Multi-paradigm
+C,1972,Dennis Ritchie,Procedural
+Java,1995,James Gosling,Object-oriented
+JavaScript,1995,Brendan Eich,Multi-paradigm
+Ruby,1995,Yukihiro Matsumoto,Object-oriented
+Go,2009,Google,Compiled
+Rust,2010,Mozilla,Systems
