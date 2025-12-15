@@ -297,7 +297,8 @@ class RetroScreensaver(Gtk.Window):
         """Add the next character to the display"""
         if self.char_index < len(self.current_text):
             # Add next character
-            self.display_text += self.current_text[self.char_index]
+            char = self.current_text[self.char_index]
+            self.display_text += char
             self.char_index += 1
             self.chars_typed += 1
             
@@ -308,9 +309,11 @@ class RetroScreensaver(Gtk.Window):
             if self.typing_delay > self.min_typing_delay:
                 self.typing_delay *= self.delay_decrease_rate
             
-            # Scroll to end
-            end_iter = self.text_buffer.get_end_iter()
-            self.text_view.scroll_to_iter(end_iter, 0.0, False, 0.0, 0.0)
+            # Only scroll when we add a newline to avoid jumpy behavior
+            if char == '\n':
+                # Scroll insert mark onscreen (gentler than scroll_to_iter)
+                insert_mark = self.text_buffer.get_insert()
+                self.text_view.scroll_mark_onscreen(insert_mark)
             
             # Schedule next character
             self.schedule_next_char()
@@ -333,9 +336,7 @@ class RetroScreensaver(Gtk.Window):
         cursor = "█" if self.blink_state else " "
         self.text_buffer.set_text(self.display_text + cursor)
         
-        # Scroll to end
-        end_iter = self.text_buffer.get_end_iter()
-        self.text_view.scroll_to_iter(end_iter, 0.0, False, 0.0, 0.0)
+        # No scrolling needed during cursor blink - content hasn't changed
         
         return True  # Continue blinking
     
