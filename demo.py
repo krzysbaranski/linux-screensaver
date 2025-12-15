@@ -42,7 +42,7 @@ class TypingDemo:
         
         try:
             # Load data based on file type
-            if data_file.suffix == '.parquet':
+            if data_file.name.endswith('.parquet'):
                 # Load Parquet file using pandas
                 df = pd.read_parquet(data_file)
                 # Convert to list of lists (header + rows)
