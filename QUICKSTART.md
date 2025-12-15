@@ -11,6 +11,11 @@
    
    # Fedora
    sudo dnf install python3-gobject gtk3
+   
+   # macOS
+   brew install cairo pkg-config gtk+3 pygobject3
+   # Note: Using version-independent Homebrew path
+   export PKG_CONFIG_PATH="/opt/homebrew/opt/cairo/lib/pkgconfig:$PKG_CONFIG_PATH"
    ```
 
 2. **Install the screensaver:**
