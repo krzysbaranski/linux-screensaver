@@ -28,7 +28,7 @@ class TypingDemo:
             header = [dataset[0]]
             data_rows = dataset[1:]
             if len(data_rows) > max_rows:
-                data_rows = random.sample(data_rows, max_rows)
+                data_rows = random.sample(data_rows, min(max_rows, len(data_rows)))
             return header + data_rows
         return dataset
         
