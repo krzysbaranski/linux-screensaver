@@ -5,10 +5,12 @@ Demonstrates the typing animation without requiring GTK
 """
 
 import csv
+import gzip
 import os
 import time
 import sys
 from pathlib import Path
+import pandas as pd
 
 class TypingDemo:
     """Demonstrates the typing effect in a terminal"""
@@ -20,30 +22,48 @@ class TypingDemo:
         self.delay_decrease_rate = 0.98
         
     def load_csv_data(self):
-        """Load a random CSV file"""
+        """Load CSV files (including gzipped) and Parquet files"""
         if not os.path.exists(self.csv_folder):
             os.makedirs(self.csv_folder, exist_ok=True)
             self.create_sample_csv()
         
+        # Find CSV, gzipped CSV, and Parquet files
         csv_files = list(Path(self.csv_folder).glob("*.csv"))
+        csv_gz_files = list(Path(self.csv_folder).glob("*.csv.gz"))
+        parquet_files = list(Path(self.csv_folder).glob("*.parquet"))
         
-        if not csv_files:
-            return "No CSV files found in: " + self.csv_folder
+        all_files = csv_files + csv_gz_files + parquet_files
         
-        # Use first CSV file
-        csv_file = csv_files[0]
+        if not all_files:
+            return "No CSV or Parquet files found in: " + self.csv_folder
+        
+        # Use first file
+        data_file = all_files[0]
         
         try:
-            with open(csv_file, 'r', newline='', encoding='utf-8') as f:
-                reader = csv.reader(f)
-                dataset = list(reader)
+            # Load data based on file type
+            if data_file.suffix == '.parquet':
+                # Load Parquet file using pandas
+                df = pd.read_parquet(data_file)
+                # Convert to list of lists (header + rows)
+                dataset = [df.columns.tolist()] + df.values.tolist()
+            elif data_file.suffix == '.gz':
+                # Load gzipped CSV file
+                with gzip.open(data_file, 'rt', newline='', encoding='utf-8') as f:
+                    reader = csv.reader(f)
+                    dataset = list(reader)
+            else:
+                # Load regular CSV file
+                with open(data_file, 'r', newline='', encoding='utf-8') as f:
+                    reader = csv.reader(f)
+                    dataset = list(reader)
             
             if dataset:
-                return self.format_data(dataset, csv_file.name)
+                return self.format_data(dataset, data_file.name)
             else:
-                return f"Empty CSV file: {csv_file.name}"
+                return f"Empty file: {data_file.name}"
         except Exception as e:
-            return f"Error loading CSV: {str(e)}"
+            return f"Error loading file: {str(e)}"
     
     def format_data(self, dataset, filename):
         """Format CSV data for retro display"""

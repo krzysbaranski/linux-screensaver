@@ -33,8 +33,8 @@ END OF DATA STREAM
 
 - 🎨 **Retro Terminal Aesthetic**: Classic green-on-black terminal display
 - ⌨️ **Realistic Typing Animation**: Characters appear one at a time with progressive speed-up
-- 📊 **CSV Data Display**: Reads and formats CSV files from a configured folder
-- 🎲 **Random Selection**: Picks random CSV files for variety
+- 📊 **Multiple Data Formats**: Supports CSV, gzipped CSV (.csv.gz), and Parquet files
+- 🎲 **Random Selection**: Picks random data files for variety
 - 💾 **Sample Data Included**: Comes with fun retro computing facts to get started
 - 🔒 **Screensaver Mode**: Fullscreen with exit on any key/mouse click
 
@@ -43,6 +43,8 @@ END OF DATA STREAM
 - Python 3.6+
 - GTK+ 3.0
 - PyGObject (Python GTK bindings)
+- pandas (for Parquet file support)
+- pyarrow (for Parquet file support)
 
 ## Installation
 
@@ -54,6 +56,9 @@ sudo apt-get install python3-gi python3-gi-cairo gir1.2-gtk-3.0
 
 # Or on Fedora
 sudo dnf install python3-gobject gtk3
+
+# Install Python dependencies
+pip install -r requirements.txt
 
 # Install the screensaver
 sudo ./install.sh
@@ -85,17 +90,44 @@ csv-screensaver
 csv-screensaver /path/to/your/csv/files
 ```
 
-### Adding Your CSV Files
+### Adding Your Data Files
 
-1. Place your CSV files in: `~/.local/share/csv-screensaver/data/`
-2. Files should have a header row and data rows
-3. The screensaver will randomly select and display them
+1. Place your data files in: `~/.local/share/csv-screensaver/data/`
+2. Supported formats:
+   - CSV files (`.csv`)
+   - Gzipped CSV files (`.csv.gz`)
+   - Parquet files (`.parquet`)
+3. Files should have a header row and data rows
+4. The screensaver will randomly select and display them
 
 Example CSV format:
 ```csv
 Name,Year,Description
 Item 1,2023,First item
 Item 2,2024,Second item
+```
+
+Example creating a gzipped CSV:
+```python
+import csv
+import gzip
+
+with gzip.open('mydata.csv.gz', 'wt', newline='', encoding='utf-8') as f:
+    writer = csv.writer(f)
+    writer.writerow(['Name', 'Year', 'Description'])
+    writer.writerow(['Item 1', '2023', 'First item'])
+```
+
+Example creating a Parquet file:
+```python
+import pandas as pd
+
+df = pd.DataFrame({
+    'Name': ['Item 1', 'Item 2'],
+    'Year': [2023, 2024],
+    'Description': ['First item', 'Second item']
+})
+df.to_parquet('mydata.parquet', index=False)
 ```
 
 ### GNOME Screensaver Integration
@@ -108,7 +140,7 @@ The screensaver can be configured in GNOME settings:
 ## How It Works
 
 The screensaver:
-1. Loads a random CSV file from your data folder
+1. Loads a random data file from your data folder (CSV, gzipped CSV, or Parquet)
 2. Formats it in a retro terminal style with borders and formatting
 3. Types out the content character-by-character
 4. Starts with slow typing (150ms per character)
@@ -128,11 +160,13 @@ You can modify the screensaver behavior by editing `csv-screensaver.py`:
 
 ## Sample Data
 
-The screensaver includes sample CSV files:
+The screensaver includes sample data files:
 - `retro_computers.csv`: Classic 1980s computers
 - `fun_facts.csv`: Interesting trivia
+- `space_missions.csv.gz`: Space missions (gzipped CSV)
+- `operating_systems.parquet`: Operating systems (Parquet format)
 
-These are automatically created on first run if no CSV files exist.
+These are automatically created on first run if no data files exist.
 
 ## Uninstallation
 
@@ -153,8 +187,9 @@ sudo rm /usr/share/applications/csv-screensaver.desktop
 - Try running from terminal: `csv-screensaver` to see error messages
 
 **Problem**: No data displayed
-- Ensure CSV files exist in `~/.local/share/csv-screensaver/data/`
-- Check CSV files are properly formatted with headers
+- Ensure data files exist in `~/.local/share/csv-screensaver/data/`
+- Check files are properly formatted (CSV with headers, valid Parquet files)
+- For gzipped CSV files, ensure they use `.csv.gz` extension
 
 **Problem**: Screen doesn't go fullscreen
 - This may happen in some window managers
@@ -170,7 +205,7 @@ Contributions welcome! Some ideas:
 - Additional color schemes (amber, white, etc.)
 - More typing effect variations
 - Sound effects
-- Support for other data formats (JSON, XML, etc.)
+- Support for other data formats (JSON, XML, Excel, etc.)
 - Configuration file support
 
 ## Credits
