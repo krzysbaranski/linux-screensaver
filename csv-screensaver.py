@@ -192,9 +192,12 @@ class RetroScreensaver(Gtk.Window):
                 total_rows_seen = 0
                 
                 for batch in parquet_file.iter_batches(batch_size=batch_size, columns=columns):
-                    column_arrays = [batch.column(i) for i in range(len(columns))]
+                    batch_columns = {name: batch.column(i) for i, name in enumerate(batch.schema.names)}
                     rows_iter = (
-                        tuple(col[row_idx].as_py() for col in column_arrays)
+                        tuple(
+                            batch_columns[name][row_idx].as_py() if name in batch_columns else None
+                            for name in columns
+                        )
                         for row_idx in range(batch.num_rows)
                     )
                     
