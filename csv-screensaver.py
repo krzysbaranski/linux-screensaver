@@ -190,13 +190,17 @@ class RetroScreensaver(Gtk.Window):
                 # Start with header row and reservoir for sampled data
                 sampled_rows = []
                 total_rows_seen = 0
+                column_index = {name: idx for idx, name in enumerate(columns)}
                 
                 for batch in parquet_file.iter_batches(batch_size=batch_size, columns=columns):
-                    batch_columns = {name: batch.column(i) for i, name in enumerate(batch.schema.names)}
+                    batch_columns = [
+                        batch.column(column_index[name]) if name in column_index and column_index[name] < batch.num_columns else None
+                        for name in columns
+                    ]
                     rows_iter = (
                         tuple(
-                            batch_columns[name][row_idx].as_py() if name in batch_columns else None
-                            for name in columns
+                            col[row_idx].as_py() if col is not None else None
+                            for col in batch_columns
                         )
                         for row_idx in range(batch.num_rows)
                     )
