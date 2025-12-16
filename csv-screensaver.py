@@ -13,10 +13,14 @@ import os
 import random
 import sys
 from pathlib import Path
+from contextlib import closing
 import pandas as pd
+import pyarrow.parquet as pq
 
 class RetroScreensaver(Gtk.Window):
     """Main screensaver window with retro terminal aesthetic"""
+    
+    MAX_DISPLAY_ROWS = 10000
     
     def __init__(self, csv_folder=None):
         super().__init__(title="CSV Retro Screensaver")
@@ -153,15 +157,67 @@ class RetroScreensaver(Gtk.Window):
         cursor_tag.set_property("foreground", "#000000")
         tag_table.add(cursor_tag)
     
-    def limit_dataset_rows(self, dataset, max_rows=10000):
+    def limit_dataset_rows(self, dataset, max_rows=None):
         """Limit dataset to header + max_rows randomly selected data rows"""
+        max_rows = self.MAX_DISPLAY_ROWS if max_rows is None else max_rows
         if len(dataset) > 1:
             header = [dataset[0]]
             data_rows = dataset[1:]
-            if len(data_rows) > max_rows:
-                data_rows = random.sample(data_rows, max_rows)
+            data_rows = self.sample_rows(data_rows, max_rows)
             return header + data_rows
         return dataset
+    
+    def sample_rows(self, rows, max_rows=None):
+        """Return up to max_rows sampled rows"""
+        max_rows = self.MAX_DISPLAY_ROWS if max_rows is None else max_rows
+        if max_rows <= 0:
+            return []
+        if len(rows) > max_rows:
+            return random.sample(rows, max_rows)
+        return rows
+    
+    def load_parquet_in_chunks(self, data_file, max_rows=None, batch_size=1000):
+        """Load parquet data without reading the entire file into memory"""
+        max_rows = self.MAX_DISPLAY_ROWS if max_rows is None else max_rows
+        
+        try:
+            with closing(pq.ParquetFile(data_file)) as parquet_file:
+                columns = parquet_file.schema.names
+                
+                if max_rows <= 0:
+                    return [columns]
+                
+                # Start with header row and reservoir for sampled data
+                sampled_rows = []
+                total_rows_seen = 0
+                column_index = {name: idx for idx, name in enumerate(columns)}
+                
+                for batch in parquet_file.iter_batches(batch_size=batch_size, columns=columns):
+                    batch_columns = [
+                        batch.column(column_index[name]) if name in column_index and column_index[name] < batch.num_columns else None
+                        for name in columns
+                    ]
+                    rows_iter = (
+                        tuple(
+                            col[row_idx].as_py() if col is not None else None
+                            for col in batch_columns
+                        )
+                        for row_idx in range(batch.num_rows)
+                    )
+                    
+                    for row in rows_iter:
+                        total_rows_seen += 1
+                        if len(sampled_rows) < max_rows:
+                            sampled_rows.append(row)
+                        else:
+                            # Reservoir sampling: uniform replacement in existing sample
+                            swap_index = random.randint(0, total_rows_seen - 1)
+                            if swap_index < max_rows:
+                                sampled_rows[swap_index] = row
+        except Exception as e:
+            raise RuntimeError(f"Failed to stream parquet file {data_file}: {e}") from e
+        
+        return [columns] + sampled_rows
         
     def load_csv_data(self):
         """Load CSV files (including gzipped) and Parquet files from the specified folder"""
@@ -188,12 +244,8 @@ class RetroScreensaver(Gtk.Window):
             # Load data based on file type (case-insensitive)
             file_name_lower = data_file.name.lower()
             if file_name_lower.endswith('.parquet'):
-                # Load Parquet file using pandas
-                df = pd.read_parquet(data_file)
-                # Convert to list of lists (header + rows) and limit rows
-                self.current_dataset = self.limit_dataset_rows(
-                    [df.columns.tolist()] + df.values.tolist()
-                )
+                # Load Parquet file in batches to avoid reading entire file into memory
+                self.current_dataset = self.load_parquet_in_chunks(data_file)
             elif file_name_lower.endswith('.csv.gz'):
                 # Load gzipped CSV file
                 with gzip.open(data_file, 'rt', newline='', encoding='utf-8') as f:
