@@ -112,6 +112,13 @@ Item 1,2023,First item
 Item 2,2024,Second item
 ```
 
+Example CSV format for quotes (with text wrapping):
+```csv
+chapter,quote
+1,"Live by the foma that make you brave and kind and healthy and happy."
+2,"We believe that humanity is organized into teams that do God's Will without ever discovering what they are doing."
+```
+
 Example creating a gzipped CSV:
 ```python
 import csv
@@ -156,10 +163,20 @@ The screensaver:
 
 ### Column Display
 
-The screensaver handles column data efficiently:
-- **Column truncation**: Long columns are truncated to 30 characters with ellipsis (...) for better readability
+The screensaver adapts its display based on the number of columns:
+
+**For tables with few columns (3 or fewer):**
+- **Text wrapping**: Content is displayed in full with intelligent word wrapping at 60 characters
+- **Easy reading**: Perfect for displaying quotes, descriptions, or other long-form text
+- **Multi-line cells**: Each row can span multiple lines to show complete content
+- **Blank line separation**: Rows are separated by blank lines for better readability
+
+**For tables with many columns (4 or more):**
+- **Column truncation**: Long columns are truncated to 30 characters with ellipsis (...)
 - **Automatic panning**: The view smoothly scrolls left and right to show all visible content
-- **No line wrapping**: Lines are displayed without breaking, maintaining the tabular format
+- **Compact display**: Maintains the tabular format for wide datasets
+
+This makes the screensaver ideal for displaying interesting quotes from books, inspirational sayings, or any content where readability is more important than compactness.
 
 ## Customization
 
