@@ -143,10 +143,12 @@ class TypingDemo:
         
         for word in words:
             word_length = len(word)
-            # +1 for space between words
-            if current_length + word_length + len(current_line) <= width:
+            # Calculate space needed: word length + 1 space if not first word
+            space_needed = word_length if not current_line else word_length + 1
+            
+            if current_length + space_needed <= width:
                 current_line.append(word)
-                current_length += word_length
+                current_length += space_needed
             else:
                 if current_line:
                     lines.append(" ".join(current_line))
